@@ -1,0 +1,31 @@
+#!/usr/bin/env ruby
+
+reports = ARGF.readlines.map(&:chomp).map(&:split).map { _1.map(&:to_i) }
+
+def check(r)
+  d = []
+  r.each_cons(2) { |a,b| d << b-a }
+  ( d.all? { _1 > 0 } || d.all? { _1 < 0 } ) && d.all? { _1.abs >= 0 } && d.all? { _1.abs <= 3 }
+end
+
+t = 0
+reports.each do |r|
+  catch :safe do
+    if check r
+      t += 1
+      throw :safe
+    end
+
+    (0 .. r.length).each do |i|
+      r2 = r.dup
+      r2.delete_at(i)
+      if check r2
+        t += 1
+        throw :safe
+      end
+    end
+
+  end
+end
+
+puts t # 626

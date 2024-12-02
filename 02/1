@@ -1,0 +1,13 @@
+#!/usr/bin/env ruby
+
+reports = ARGF.readlines.map(&:chomp).map(&:split).map { _1.map(&:to_i) }
+
+t = 0
+
+safe = reports.map { |r|
+  d = []
+  r.each_cons(2) { |a,b| d << b-a }
+  ( d.all? { _1 > 0 } || d.all? { _1 < 0 } ) && d.all? { _1.abs >= 0 } && d.all? { _1.abs <= 3 }
+}
+
+puts safe.select { _1 }.count # 585
