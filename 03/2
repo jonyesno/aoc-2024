@@ -1,0 +1,18 @@
+#!/usr/bin/env ruby
+
+input = ARGF.read.chomp
+
+enable = true
+total  = 0
+input.scan(%r{(do\(\)|don't\(\)|mul\(\d+,\d+\))}).map(&:first).each do |op|
+  case op
+  when "do()"
+    enable = true
+  when "don't()"
+    enable = false
+  else
+    total += op.match(%r{(\d+),(\d+)}).captures.map(&:to_i).inject(1,:*) if enable
+  end
+end
+
+puts total # 90044227

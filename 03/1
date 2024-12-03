@@ -1,0 +1,5 @@
+#!/usr/bin/env ruby
+
+input = ARGF.read.chomp
+
+puts input.scan(%r{mul\((\d+),(\d+)\)}).map { _1.map(&:to_i) }.map { _1*_2 }.sum # 184511516
