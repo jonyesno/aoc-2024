@@ -1,0 +1,87 @@
+#!/usr/bin/env ruby
+
+class Grid
+  def initialize(grid)
+    @grid = grid
+    @mx = grid.first.length - 1
+    @my = grid.length - 1
+  end
+
+  def at(coord)
+    x = coord.x
+    y = coord.y
+    case
+    when x < 0 || y < 0
+      '.'
+    when x > @mx || y > @my
+      '.'
+    else
+      @grid[y][x]
+    end
+  end
+
+  def to_s
+    @grid.join("\n")
+  end
+
+  def find(coord, value)
+    x = coord.x
+    y = coord.y
+
+    while self.at(Coord.new(x,y)) != value
+      case
+      when x < @mx
+        x += 1
+      when x >= @mx && y < @my
+        x = 0 ; y += 1
+      else
+        # fell of the end
+        return false
+      end
+    end
+
+    Coord.new(x,y)
+  end
+
+  def draw(coord)
+    (-1 .. 1).each do |dy|
+      (-1 .. 1).each do |dx|
+        print self.at(Coord.new(coord.x + dx, coord.y + dy))
+      end
+      puts
+    end
+  end
+end
+
+Coord = Struct.new(:x,:y) do
+  # 701
+  # 6 2
+  # 543
+
+  def next(dir)
+    delta = [ [0,-1], [1,-1], [1,0], [1,1], [0,1], [-1,1], [-1,0], [-1,-1] ][dir]
+    Coord.new(x + delta.first, y + delta.last)
+  end
+
+  def prev(dir)
+    delta = [ [0,-1], [1,-1], [1,0], [1,1], [0,1], [-1,1], [-1,0], [-1,-1] ][(dir+4)%8]
+    Coord.new(x + delta.first, y + delta.last)
+  end
+end
+
+grid = Grid.new(ARGF.readlines.map(&:chomp))
+
+t = 0
+at = Coord.new(-1,0)
+while at = grid.find(at.next(2), 'A')
+  [1,3,5,7].each do |dir|
+    if grid.at(at.prev(dir)) == 'M' && grid.at(at.next(dir)) == 'S'
+      xdir = (dir+2) % 8
+      if grid.at(at.prev(xdir)) == 'M' && grid.at(at.next(xdir)) == 'S'
+        t += 1
+      end
+    end
+  end
+end
+
+puts t # 1925
