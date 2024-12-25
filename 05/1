@@ -1,0 +1,27 @@
+#!/usr/bin/env ruby
+
+rules, _updates = ARGF.read.split("\n\n").map(&:split)
+updates = _updates.map { _1.split(",").map(&:to_i) }
+
+rule = Hash.new { |h,k| h[k] = [] }
+
+rules.each do |r|
+  left, right = r.split("|").map(&:to_i)
+  rule[left] << right
+end
+
+ok = []
+updates.each do |update|
+  acc = []
+
+  catch :check do
+    update.each do |p|
+      throw :check unless (acc & rule[p]).empty?
+      acc << p
+    end
+    ok << acc
+  end
+
+end
+
+puts ok.inject(0) { |t, o| t += o[(o.length - 1) / 2] } # 7307

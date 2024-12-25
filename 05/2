@@ -1,0 +1,45 @@
+#!/usr/bin/env ruby
+
+rules, _updates = ARGF.read.split("\n\n").map(&:split)
+updates = _updates.map { _1.split(",").map(&:to_i) }
+
+rule = Hash.new { |h,k| h[k] = [] }
+
+rules.each do |r|
+  left, right = r.split("|").map(&:to_i)
+  rule[left] << right
+end
+
+ok = []
+updates.each do |update|
+  acc = []
+
+  catch :check do
+    update.each do |p|
+      throw :check unless (acc & rule[p]).empty?
+      acc << p
+    end
+    ok << acc
+  end
+
+end
+
+nok = updates - ok
+
+fixed = []
+nok.each do |update|
+  fixed << update.sort { |x,y|
+    case
+    when rule[x].include?(y)
+      # y must come after x, so rank x higher
+      -1
+    when rule[y].include?(x)
+      # ...
+      1
+    else
+      0
+    end
+  }
+end
+
+puts fixed.inject(0) { |t, o| t += o[(o.length - 1) / 2] } # 4713
