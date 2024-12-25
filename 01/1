@@ -1,8 +1,5 @@
 #!/usr/bin/env ruby
 
-l1 = []
-l2 = []
-
-ARGF.readlines.each.map(&:chomp).each {|l| _l,_r = l.split.map(&:to_i); l1 << _l; l2 << _r }
+l1, l2 = ARGF.readlines.map(&:chomp).map(&:split).map{ _1.map(&:to_i) }.transpose
 
 puts l1.sort.zip(l2.sort).map { |p| (p.first - p.last).abs }.sum # 1319616
