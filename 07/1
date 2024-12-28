@@ -1,0 +1,29 @@
+#!/usr/bin/env ruby
+
+equations = ARGF.readlines.map(&:chomp)
+
+calibration = 0
+equations.each do |equation|
+  _total, _operands = equation.split(/:/)
+  total = _total.to_i
+  operands = _operands.scan(/\d+/).map(&:to_i)
+
+  found = false
+
+  [ :*, :+ ].repeated_permutation(operands.size - 1).each do |operators|
+    nn = operands.dup
+    op = operators.dup
+    n = nn.shift
+    until nn.empty?
+      i = nn.shift
+      o = op.shift
+      n = n.send(o, i)
+    end
+    found = true if n == total
+    # puts "#{total} == #{operands} v #{operators}" if n == total
+  end
+
+  calibration += total if found
+end
+
+puts calibration # 1985268524462

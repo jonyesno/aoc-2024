@@ -1,0 +1,35 @@
+#!/usr/bin/env ruby
+
+equations = ARGF.readlines.map(&:chomp)
+
+class Integer
+  def cc(x)
+    "#{self.to_s}#{x.to_s}".to_i
+  end
+end
+
+calibration = 0
+equations.each do |equation|
+  _total, _operands = equation.split(/:/)
+  total = _total.to_i
+  operands = _operands.scan(/\d+/).map(&:to_i)
+
+  found = false
+
+  [ :*, :+, :cc ].repeated_permutation(operands.size - 1).each do |operators|
+    nn = operands.dup
+    op = operators.dup
+    n = nn.shift
+    until nn.empty?
+      i = nn.shift
+      o = op.shift
+      n = n.send(o, i)
+    end
+    found = true if n == total
+    # puts "#{total} == #{operands} v #{operators}" if n == total
+  end
+
+  calibration += total if found
+end
+
+puts calibration # 150077710195188
