@@ -1,0 +1,119 @@
+#!/usr/bin/env ruby
+
+input = ARGF.readlines.map(&:chomp)
+
+Coord = Struct.new(:x,:y) do
+  #  0
+  # 3 1
+  #  2
+  def move(dir)
+    delta = [ [0,-1], [1,0], [0,1], [-1,0] ][dir]
+    Coord.new(x + delta.first, y + delta.last)
+  end
+end
+
+CoordDir = Struct.new(:pos, :dir)
+
+class Grid
+  attr_accessor :obstacles, :pos, :dir
+
+  DIR = "^>v<"
+
+  def initialize(grid, pos = nil, dir = 0)
+    @grid = grid
+    @mx = grid.first.length - 1
+    @my = grid.length - 1
+
+    @obstacles = Set.new
+
+    @pos = pos
+    @dir = dir
+
+    (0..@my).each do |y|
+      (0..@mx).each do |x|
+        case @grid[y][x]
+        when '#'
+          @obstacles << Coord.new(x,y)
+        when '^'
+          @pos ||= Coord.new(x,y)
+        end
+      end
+    end
+  end
+
+  def move
+    new_pos = @pos.move(@dir)
+    if self.obstructed?(new_pos)
+      # don't move to new_pos, turn right instead
+      @dir = (@dir + 1) % 4
+    else
+      @pos = new_pos
+    end
+  end
+
+  def obstructed?(coord)
+    @obstacles.include?(coord)
+  end
+
+  def on?
+    # @pos.x.between?(0, @mx) && @pos.y.between?(0, @my)
+    @pos.x >= 0 && @pos.x <= @mx && @pos.y >= 0 && @pos.y <= @mx
+  end
+
+  def to_s
+    (0..@my).each do |y|
+      (0..@mx).each do |x|
+        coord = Coord.new(x,y)
+        case
+        when @obstacles.include?(coord)
+          print "#"
+        when @pos == coord
+          print DIR[@dir]
+        else
+          print "."
+        end
+      end
+      puts
+    end
+  end
+end
+
+grid = Grid.new(input.map(&:dup))
+# puts grid
+
+path = []
+path << CoordDir.new(grid.pos, grid.dir)
+
+while grid.on?
+  grid.move
+  path << CoordDir.new(grid.pos, grid.dir)
+end
+path.delete(CoordDir.new(grid.pos, grid.dir)) # off end
+
+total = path.size
+loops = Set.new
+
+path.each_cons(2).with_index do |check, n|
+  # puts "#{n}/#{total} #{loops.size}" if n % 100 == 0
+
+  start, obstacle = check
+  grid = Grid.new(input.map(&:dup))
+  grid.pos = start.pos
+  grid.dir = start.dir
+  grid.obstacles << obstacle.pos
+
+  path = Set.new
+  path << CoordDir.new(grid.pos, grid.dir)
+  while grid.on?
+    grid.move
+    here = CoordDir.new(grid.pos, grid.dir)
+    if path.include?(here)
+      loops << obstacle.pos
+      break
+    else
+      path << here
+    end
+  end
+end
+
+puts loops.size # 2008
