@@ -1,0 +1,30 @@
+#!/usr/bin/env ruby
+
+grid = ARGF.readlines.map(&:chomp)
+
+sx = grid.first.size
+sy = grid.size
+mx = sx - 1
+my = sy - 1
+
+antennae = Hash.new { |h,k| h[k] = [] }
+antinode = Hash.new { |h,k| h[k] = [] }
+
+Coord = Struct.new(:x,:y)
+
+sy.times do |y|
+  sx.times do |x|
+    antennae[grid[y][x]] << Coord.new(x,y) unless grid[y][x] == ?.
+  end
+end
+
+antennae.each do |ant, positions|
+  positions.permutation(2).each do |pair|
+    dx = pair[1].x - pair[0].x
+    dy = pair[1].y - pair[0].y
+
+    antinode[ant] << Coord.new(pair[1].x + dx, pair[1].y + dy)
+  end
+end
+
+puts antinode.values.flatten.select { |c| c.x.between?(0,mx) && c.y.between?(0,my) }.uniq.size # 409
