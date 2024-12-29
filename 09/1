@@ -1,0 +1,63 @@
+#!/usr/bin/env ruby
+
+disk = ARGF.read.chomp.chars.map(&:to_i)
+
+blocks = []
+id = 0
+
+Fyle = Struct.new(:id, :size) do
+  def to_s
+    id.to_s * size
+  end
+end
+
+Free = Struct.new(:id, :size) do
+  def to_s
+    ?. * size
+  end
+end
+
+disk.each_slice(2) do |file, free|
+  blocks << Fyle.new(id, file)
+  blocks << Free.new(0,  free) if free && free > 0
+  id += 1
+end
+
+loop do
+  free = blocks.detect { |b| b.kind_of?(Free) }
+  file = blocks.reverse.detect { |b| b.kind_of?(Fyle) }
+  break if free.nil?
+
+  free_idx = blocks.index(free)
+  file_idx = blocks.size - blocks.reverse.index(file) - 1
+  break if free_idx > file_idx
+
+  moving = [ free.size, file.size ].min
+  blocks.insert(free_idx, Fyle.new(file.id, moving))
+  free_idx += 1 ; file_idx += 1
+
+  free_remaining = free.size - moving
+  if free_remaining == 0
+    blocks.delete_at(free_idx)
+    file_idx -= 1
+  else
+    free.size = free_remaining
+  end
+
+  file_remaining = file.size - moving
+  if file_remaining == 0
+    blocks.delete_at(file_idx)
+  else
+    file.size = file_remaining
+  end
+
+end
+
+pos = 0
+checksum = 0
+blocks.select { |b| b.kind_of?(Fyle) }.each do |file|
+  (pos .. pos + file.size - 1).each { |n| checksum += n * file.id }
+  pos += file.size
+end
+
+puts checksum # 6299243228569
