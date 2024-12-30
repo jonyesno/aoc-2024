@@ -1,0 +1,71 @@
+#!/usr/bin/env ruby
+
+class Grid
+  attr_reader :trailheads, :mx, :my
+
+  def initialize(grid)
+    @grid = grid
+
+    @mx = grid.first.length - 1
+    @my = grid.length - 1
+
+    @trailheads = []
+    (0..@my).each do |y|
+      (0..@mx).each do |x|
+        @trailheads << [x,y] if @grid[y][x] == '0'
+      end
+    end
+  end
+
+  def at(coord)
+    x,y = coord
+    if x < 0 || y < 0 || x > mx || y > my
+      ?.
+    else
+      @grid[y][x].to_i
+    end
+  end
+
+  def show(path)
+    (0..@my).each do |y|
+      (0..@mx).each do |x|
+        if path.include?([x,y])
+          print @grid[y][x]
+        else
+          print ?.
+        end
+      end
+      puts
+    end
+  end
+end
+
+
+State = Struct.new(:pos, :path)
+grid = Grid.new(ARGF.readlines.map(&:chomp))
+
+total = 0
+grid.trailheads.each do |start|
+  tops = []
+  queue = [ State.new(start, [start]) ]
+
+  while state = queue.shift
+    # grid.show(state.path)
+    pos = state.pos
+    if grid.at(pos) == 9
+      tops << state.path.dup
+      next
+    end
+
+    [ [0,-1], [1,0], [0,1], [-1,0] ].each do |delta|
+      nxt = [ pos[0] + delta[0], pos[1] + delta[1] ]
+      next if grid.at(nxt) == '.'
+      next if grid.at(nxt) - 1 != grid.at(pos)
+      queue.push(State.new(nxt, state.path.dup << nxt))
+    end
+  end
+
+  total += tops.length
+end
+
+puts total # 1210
