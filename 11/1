@@ -1,0 +1,22 @@
+#!/usr/bin/env ruby
+
+stones = ARGF.read.chomp.split.map(&:to_i)
+
+25.times do
+  tmp = []
+  stones.each_with_index do |stone, idx|
+    len = stone.to_s.chars.length
+    case
+    when stone == 0
+      tmp << 1
+    when len % 2 == 0
+      tmp << stone.to_s.chars[0 .. (len/2)-1].join.to_i
+      tmp << stone.to_s.chars[len/2 .. -1].join.to_i
+    else
+      tmp << stone * 2024
+    end
+  end
+  stones = tmp
+end
+
+puts stones.count # 185205

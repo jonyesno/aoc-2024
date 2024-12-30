@@ -1,0 +1,36 @@
+#!/usr/bin/env ruby
+
+stones = ARGF.read.chomp.split.map(&:to_i)
+
+stash = Hash.new { |h,k| h[k] = 0 }
+memo  = Hash.new
+
+stones.each { stash[_1] += 1 }
+
+75.times do
+  tmp = Hash.new { |h,k| h[k] = 0 }
+  stash.each do |stone, qty|
+
+    if m = memo[stone]
+      m.each { tmp[_1] += qty }
+    else
+      len = stone.to_s.chars.length
+      m = []
+      case
+      when stone == 0
+        m << 1
+      when len % 2 == 0
+        m << stone.to_s.chars[0 .. (len/2)-1].join.to_i
+        m << stone.to_s.chars[len/2 .. -1].join.to_i
+      else
+        m << stone * 2024
+      end
+
+      memo[stone] = m
+      m.each { tmp[_1] += qty }
+    end
+  end
+  stash = tmp
+end
+
+puts stash.values.sum # 221280540398419
