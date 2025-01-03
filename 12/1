@@ -1,0 +1,72 @@
+#!/usr/bin/env ruby
+
+Plot = Struct.new(:label, :coords)
+
+class Grid
+  attr_reader :plots
+
+  def initialize(grid)
+    @grid = grid
+
+    @mx = grid.first.chars.length - 1
+    @my = grid.length - 1
+
+    plids = (0..@my).map { |y|
+      (0..@mx).map { |x|
+        Plot.new(label: self.at([x,y]), coords: Set.new([[x,y]]))
+      }
+    }
+
+    # union-find kindasorta
+    (0..@my).each do |y|
+      (0..@mx).each do |x|
+        self.neighbours([x,y]).each do |look|
+          here = [x,y]
+          lx = look[0]
+          ly = look[1]
+
+          if self.at(here) == self.at(look)
+            # add the neighbour's set of coords to ours
+            # and visit each of those coords and make that set the same as this new one
+            tmp = plids[y][x].coords + plids[ly][lx].coords
+            plids[y][x].coords = tmp
+            plids[y][x].coords.each { |coord| plids[coord[1]][coord[0]].coords = tmp }
+          end
+        end
+      end
+    end
+
+    @plots = Set.new
+    plids.flatten.map { @plots << _1 }
+
+  end
+
+  def at(coord)
+    x,y = coord
+    case
+    when x < 0 || x > @mx
+      ?.
+    when y < 0 || y > @my
+      ?.
+    else
+      @grid[y][x]
+    end
+  end
+
+  def neighbours(coord)
+    x,y = coord
+    [ [0,-1], [1,0], [0,1], [-1,0] ].map { |delta| [ x + delta[0], y + delta[1] ] }
+  end
+end
+
+grid = Grid.new(ARGF.readlines.map(&:chomp))
+
+perimeters = []
+areas = []
+grid.plots.each do |plot|
+  areas << plot.coords.size
+  # for each coord in a plot, count the number of neighbours that aren't in this plot
+  perimeters << plot.coords.map { |coord| grid.neighbours(coord).select { |look| !plot.coords.include?(look) }.size }.sum
+end
+
+puts areas.zip(perimeters).map { _1.inject(:*) }.sum # 1457298

@@ -1,0 +1,100 @@
+#!/usr/bin/env ruby
+
+Plot = Struct.new(:label, :coords)
+
+class Grid
+  attr_reader :plots
+
+  def initialize(grid)
+    @grid = grid
+
+    @mx = grid.first.chars.length - 1
+    @my = grid.length - 1
+
+    plids = (0..@my).map { |y|
+      (0..@mx).map { |x|
+        Plot.new(label: self.at([x,y]), coords: Set.new([[x,y]]))
+      }
+    }
+
+    # union-find kindasorta
+    (0..@my).each do |y|
+      (0..@mx).each do |x|
+        self.neighbours([x,y]).each do |look|
+          here = [x,y]
+          lx = look[0]
+          ly = look[1]
+
+          if self.at(here) == self.at(look)
+            # add the neighbour's set of coords to ours
+            # and visit each of those coords and make that set the same as this new one
+            tmp = plids[y][x].coords + plids[ly][lx].coords
+            plids[y][x].coords = tmp
+            plids[y][x].coords.each { |coord| plids[coord[1]][coord[0]].coords = tmp }
+          end
+        end
+      end
+    end
+
+    @plots = Set.new
+    plids.flatten.map { @plots << _1 }
+
+  end
+
+  def at(coord)
+    x,y = coord
+    case
+    when x < 0 || x > @mx
+      ?.
+    when y < 0 || y > @my
+      ?.
+    else
+      @grid[y][x]
+    end
+  end
+
+  def neighbours(coord)
+    x,y = coord
+    [ [0,-1], [1,0], [0,1], [-1,0] ].map { |delta| [ x + delta[0], y + delta[1] ] }
+  end
+end
+
+grid = Grid.new(ARGF.readlines.map(&:chomp))
+
+corners = []
+areas = []
+grid.plots.each do |plot|
+  areas << plot.coords.size
+
+  corner_deltas = [
+    [[0,-1], [1,-1],  [1,0]],  # NE
+    [[1,0],  [1,1],   [0,1]],  # SE
+    [[0,1],  [-1,1],  [-1,0]], # SW
+    [[-1,0], [-1,-1], [0,-1]]  # NW
+  ]
+
+  c = 0
+  plot.coords.each do |coord|
+    corner_deltas.each do |d1, d2, d3|
+      c1 = [ coord[0] + d1[0], coord[1] + d1[1] ]
+      c2 = [ coord[0] + d2[0], coord[1] + d2[1] ]
+      c3 = [ coord[0] + d3[0], coord[1] + d3[1] ]
+
+      # outer corner - adjacent compass-point neighbours is outside
+      # AB
+      # Bx
+      c += 1 if !plot.coords.include?(c1) && !plot.coords.include?(c3)
+
+      # inner corner - adjacents compass-points neighbours are inside, but diagonal inbetween isn't
+      # AA
+      # AB
+      c += 1 if plot.coords.include?(c1) && plot.coords.include?(c3) && !plot.coords.include?(c2)
+
+    end
+  end
+
+  corners << c
+
+end
+
+puts areas.zip(corners).map { _1.inject(:*) }.sum # 921636
