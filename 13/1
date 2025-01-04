@@ -1,0 +1,47 @@
+#!/usr/bin/env ruby
+
+machines = ARGF.read.split("\n\n")
+
+def solve(x1,x2,y1,y2,c1,c2)
+  a = (y2*c1 - x2*c2).to_f / (x1*y2 - x2*y1)
+  b = (c2 - y1*a).to_f / y2
+  [a,b]
+end
+
+total = 0
+machines.each do |spec|
+  x1,y1 = spec.match(%r{Button A: X\+(\d+), Y\+(\d+)})[1,2].map(&:to_i)
+  x2,y2 = spec.match(%r{Button B: X\+(\d+), Y\+(\d+)})[1,2].map(&:to_i)
+  c1,c2 = spec.match(%r{Prize: X=(\d+), Y=(\d+)})[1,2].map(&:to_i)
+
+  a,b = solve(x1,x2,y1,y2,c1,c2)
+
+  if a <= 100 && b <= 100
+    if a % 1 < 0.0000001 && b % 1 < 0.0000001
+      total += 3*a + b
+    end
+  end
+end
+
+puts total.to_i # 29877
+
+__END__
+
+Button A: X+94, Y+34
+Button B: X+22, Y+67
+Prize: X=8400, Y=5400
+
+94a + 22b = 8400
+34a + 67b = 5400
+
+x1*a + x2*b = c1
+y1*a + y2*b = c2
+
+b = (c2 - y1*a) / y2
+
+x1*a + x2*(c2 - y1*a)/y2 = c1
+x1*y2*a + x2*c2 - x2*y1*a = y2*c1
+x1*y2*a - x2*y1*a = y2*c1 - x2*c2
+a(x1*y2 - x2*y1) = y2*c1 - x2*c2
+
+a = (y2*c1 - x2*c2) / (x1*y2 - x2*y1)
