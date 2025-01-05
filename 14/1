@@ -1,0 +1,45 @@
+#!/usr/bin/env ruby
+
+initial = ARGF.readlines.map(&:chomp)
+
+# SX = 11
+# SY = 7
+SX = 101
+SY = 103
+
+class Robot
+  attr_reader :pos
+
+  def initialize(pos, vel)
+    @pos = pos
+    @vel = vel
+  end
+
+  def move(t)
+    nx = (@pos[0] + @vel[0] * t) % SX
+    ny = (@pos[1] + @vel[1] * t) % SY
+    @pos = [nx,ny]
+  end
+end
+
+robots = initial.map { |r|
+  x,y,vx,vy = r.match(%r{p=(-?\d+),(-?\d+)\s+v=(-?\d+),(-?\d+)})[1..4].map(&:to_i)
+  Robot.new([x,y],[vx,vy])
+}
+
+robots.map { _1.move(100) }
+
+SY.times do |y|
+  SX.times do |x|
+    print robots.select { |r| r.pos == [x,y] }.size.to_s.gsub('0', '.')
+  end
+  puts
+end
+
+quads = []
+quads << robots.select { |r| r.pos[0] < (SX-1)/2 && r.pos[1] < (SY-1)/2 }
+quads << robots.select { |r| r.pos[0] > (SX-1)/2 && r.pos[1] < (SY-1)/2 }
+quads << robots.select { |r| r.pos[0] > (SX-1)/2 && r.pos[1] > (SY-1)/2 }
+quads << robots.select { |r| r.pos[0] < (SX-1)/2 && r.pos[1] > (SY-1)/2 }
+
+puts quads.map { _1.size }.inject(:*) # 218619324
